@@ -64,7 +64,7 @@ app.get("/bearerToken", async (req, res) => {
     res.render("index.ejs", { content: JSON.stringify(response.data) });
   } catch (error) {
     console.log(error);
-    res.render("index.ejs", { content: error });
+    res.render("index.ejs", { content: error.response.data });
   }
 });
 
