@@ -28,13 +28,7 @@ app.post("/", async (req, res) => {
   const type = req.body.type;
   const participants = req.body.participants;
 
-  let targetUrl = "https://bored-api.appbrewery.com/filter?";
-  if (type.trim().length > 0) {
-    targetUrl = targetUrl + "type=" + type + "&";
-  }
-  if (participants.trim().length > 0) {
-    targetUrl = targetUrl + "participants=" + participants + "&";
-  }
+  let targetUrl = `https://bored-api.appbrewery.com/filter?type=${type}&participants=${participants}`;
 
   try {
     const response = await axios.get(targetUrl);
