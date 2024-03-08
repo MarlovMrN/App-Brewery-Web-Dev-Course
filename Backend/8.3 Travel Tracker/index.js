@@ -13,6 +13,8 @@ const db = new pg.Client({
   database: "world",
 });
 
+let visitedCountriesArray = [];
+
 db.connect();
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -20,7 +22,7 @@ app.use(express.static("public"));
 
 app.get("/", async (req, res) => {
   const result = await db.query("SELECT country FROM visited_countries");
-  const visitedCountriesArray = [];
+  visitedCountriesArray = [];
   result.rows.forEach((element) => {
     visitedCountriesArray.push(element.country);
   });
@@ -35,28 +37,31 @@ app.post("/add", async (req, res) => {
     "SELECT country_code from countries where LOWER(country_name) ILIKE $1",
     [countryName.toLowerCase()]
   );
-
-  if (result.rowCount == 0) {
+  console.log("got abrr:", result.rows);
+  if (result.rowCount != 0) {
     try {
+      console.log("trying to add ", result.rows);
+
       await db.query("INSERT INTO visited_countries (country) VALUES ($1)", [
         result.rows[0].country_code,
       ]);
+      res.redirect("/");
     } catch (error) {
-      if (!(error.code == 23505)) {
-        console.log(error);
+      if (error.code == 23505) {
+        res.render("index.ejs", {
+          countries: visitedCountriesArray,
+          total: visitedCountriesArray.length,
+          error: "Country Already Added",
+        });
       }
     }
-
-    visitedCountriesArray.push(result.rows[0].country_code);
-    res.redirect("/");
-    
+  } else {
+    res.render("index.ejs", {
+      countries: visitedCountriesArray,
+      total: visitedCountriesArray.length,
+      error: "Country Not Found, type in english with proper accentuation",
+    });
   }
-
-  // const countryCode = res.render("index.ejs", {
-  //   countries: visitedCountriesArray,
-  //   total: visitedCountriesArray.length,
-  // });
-  // res.sendStatus(200);
 });
 
 app.listen(port, () => {
