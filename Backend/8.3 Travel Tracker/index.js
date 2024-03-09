@@ -34,6 +34,20 @@ function addValuesWildcard(values) {
   return newValues;
 }
 
+async function queryCountry(countryName, flexibleSearch) {
+  let queryValues = flexibleSearch
+    ? countryName.trim().split(" ")
+    : [countryName.trim()];
+
+  const queryString = createCountryCodeQuery(queryValues);
+
+  queryValues = flexibleSearch ? addValuesWildcard(queryValues) : queryValues;
+
+  const result = await db.query(queryString, queryValues);
+
+  return result;
+}
+
 db.connect();
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -60,12 +74,14 @@ app.post("/add", async (req, res) => {
     res.sendStatus(400);
   }
   const countryName = req.body.country;
-  const countryNameSplit = countryName.trim().split(" ");
+  let result;
 
-  const queryString = createCountryCodeQuery(countryNameSplit);
-  const queryValues = addValuesWildcard(countryNameSplit);
+  result = await queryCountry(countryName, false);
 
-  const result = await db.query(queryString, queryValues);
+  if (result.rowCount == 0) {
+    result = await queryCountry(countryName, true);
+  }
+
   if (result.rowCount == 1) {
     try {
       await db.query("INSERT INTO visited_countries (country) VALUES ($1)", [
