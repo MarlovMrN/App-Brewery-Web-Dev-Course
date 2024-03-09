@@ -15,6 +15,25 @@ const db = new pg.Client({
 
 let visitedCountriesArray = [];
 
+function createCountryCodeQuery(values) {
+  const wordCount = values.length;
+
+  let queryString =
+    "Select country_code FROM countries WHERE country_name ILIKE $1 ";
+  for (let i = 2; i <= wordCount; i++) {
+    queryString += `AND country_name ILIKE $${i} `;
+  }
+  return queryString;
+}
+
+function addValuesWildcard(values) {
+  const newValues = [];
+  values.forEach((element) => {
+    newValues.push("%" + element + "%");
+  });
+  return newValues;
+}
+
 db.connect();
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -31,17 +50,24 @@ app.get("/", async (req, res) => {
   });
 });
 
-app.post("/add", async (req, res) => {
-  const countryName = req.body.country;
-  const result = await db.query(
-    "SELECT country_code from countries where LOWER(country_name) ILIKE $1",
-    [countryName.toLowerCase()]
-  );
-  console.log("got abrr:", result.rows);
-  if (result.rowCount != 0) {
-    try {
-      console.log("trying to add ", result.rows);
+app.post("/reset", async (req, res) => {
+  const result = await db.query("DELETE FROM visited_countries");
+  res.redirect("/");
+});
 
+app.post("/add", async (req, res) => {
+  if (!req.body.country) {
+    res.sendStatus(400);
+  }
+  const countryName = req.body.country;
+  const countryNameSplit = countryName.trim().split(" ");
+
+  const queryString = createCountryCodeQuery(countryNameSplit);
+  const queryValues = addValuesWildcard(countryNameSplit);
+
+  const result = await db.query(queryString, queryValues);
+  if (result.rowCount == 1) {
+    try {
       await db.query("INSERT INTO visited_countries (country) VALUES ($1)", [
         result.rows[0].country_code,
       ]);
@@ -53,13 +79,23 @@ app.post("/add", async (req, res) => {
           total: visitedCountriesArray.length,
           error: "Country Already Added",
         });
+      } else {
+        console.log(error);
+        res.redirect("/");
       }
     }
-  } else {
+  } else if (result.rowCount == 0) {
     res.render("index.ejs", {
       countries: visitedCountriesArray,
       total: visitedCountriesArray.length,
       error: "Country Not Found, type in english with proper accentuation",
+    });
+  } else {
+    res.render("index.ejs", {
+      countries: visitedCountriesArray,
+      total: visitedCountriesArray.length,
+      error:
+        "Resulted in more than one Country, please use the country complete name",
     });
   }
 });
