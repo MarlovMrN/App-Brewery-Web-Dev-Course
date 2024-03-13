@@ -79,7 +79,8 @@ app.get("/", async (req, res) => {
     countries: countries,
     total: countries.length,
     users: users,
-    color: currentUser.color,
+    currentUser: currentUser,
+    color: currentUser ? currentUser.color : "",
   });
 });
 
@@ -114,6 +115,7 @@ app.post("/add", async (req, res) => {
           countries: countries,
           total: countries.length,
           users: users,
+          currentUser: currentUser,
           color: currentUser.color,
           error: "Country Already Added",
         });
@@ -131,7 +133,8 @@ app.post("/add", async (req, res) => {
       countries: countries,
       total: countries.length,
       users: users,
-      color: currentUser.color,
+      currentUser: currentUser,
+      color: currentUser ? currentUser.color : "",
       error: "Country Not Found, type in english with proper accentuation",
     });
   } else {
@@ -143,6 +146,7 @@ app.post("/add", async (req, res) => {
       countries: countries,
       total: countries.length,
       users: users,
+      currentUser: currentUser,
       color: currentUser.color,
       error:
         "Resulted in more than one Country, please use the country complete name",

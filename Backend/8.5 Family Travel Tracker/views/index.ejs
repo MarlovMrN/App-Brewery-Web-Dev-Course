@@ -25,7 +25,7 @@
       <label for="tab">Add Family Member</label>
     </form>
 
-    <form action="/add" method="post">
+    <form id="addCountryForm" action="/add" method="post">
       <input
         type="text"
         name="country"
@@ -940,6 +940,15 @@
           element.style.fill = "<%= color %>";
         }
       });
+
+      document.getElementById("addCountryForm").onsubmit = function () {
+        const currentUser = "<%= currentUser %>";
+
+        if (!currentUser) {
+          alert("Please add a Family member first");
+          return false; // Prevent form submission
+        }
+      };
     </script>
   </body>
 </html>
