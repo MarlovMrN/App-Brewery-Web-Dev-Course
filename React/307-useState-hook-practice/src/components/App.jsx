@@ -1,12 +1,10 @@
 import React, { useState } from "react";
 
 function App() {
-  const [time, setTime] = useState(
-    new Date().toLocaleTimeString("en-US", { hour12: false })
-  );
+  const [time, setTime] = useState(new Date().toLocaleTimeString());
 
   function updateTime() {
-    setTime(new Date().toLocaleTimeString("en-US", { hour12: false }));
+    setTime(new Date().toLocaleTimeString());
   }
 
   setInterval(updateTime, 1000);
